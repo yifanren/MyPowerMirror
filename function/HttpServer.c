@@ -21,7 +21,7 @@ int main(void) {
     char buf[BUFSIZE];
     int clientSock[MAXCONNECT];
     int len;
-
+    addrlen = sizeof(clientAdd);
     if ((serverfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         perror("server socket failed\n");
         exit(1);
@@ -45,57 +45,53 @@ int main(void) {
     } 
     printf("listen ok \n");
 
-    fd_set readfd;
+    fd_set readfd, tempfd;
+    struct timeval tv;
     int maxfd = serverfd;
     int connectCount = 0;
-    addrlen = sizeof(clientAdd);
+    FD_ZERO(&readfd);
+    FD_SET(serverfd, &readfd);
     
     while(1) {
-        FD_ZERO(&readfd);
-        FD_SET(serverfd, &readfd);//添加服务器描述符
-        for(int i = 0; i < connectCount; i++) {
-            if (clientSock[i] != 0)
-                FD_SET(clientSock[i], &readfd);
-        }
-
-        int fds = select(maxfd + 1, &readfd, NULL, NULL, NULL);
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
+        FD_ZERO(&tempfd);
+        tempfd = readfd;
+        int fds = select(maxfd + 1, &tempfd, NULL, NULL, &tv);
         if (fds < 0) {
             perror("select failed\n");
             close(clientfd);
             close(serverfd);
             exit(1);
         } else if (fds == 0) {
+            printf("1s fresh\n");
             continue;
         }
 
-        printf("xunhuan jici\n");
         //have info
         for ( int i = 0; i < connectCount; i++) {
-            if (FD_ISSET(clientSock[i], &readfd)) {
-                //client send message
-                printf("i = %d, connectCount = %d, clientSock[i] = %d\n", i, connectCount, clientSock[i]);
+            if (FD_ISSET(clientSock[i], &tempfd)) {
                 memset(buf, 0, BUFSIZE);
                 len = recv(clientSock[i], buf, BUFSIZE, 0);
                 if (len > 0) {
-                    printf("server recv message :%s\n", buf);
+                    printf("server recv clientSock[%d] message :%s\n", i,  buf);
                     memset(buf, 0, BUFSIZE);
                     strcpy(buf, "pong");
                     send(clientfd, buf, strlen(buf), 0);
-                    FD_CLR(clientSock[i], &readfd);
                 }
 
-                printf("len = %d\n", len);
-                if (len == 0) {
+                if (len <= 0) {
                     printf("client %d close\n", clientSock[i]);
+                    close(clientSock[i]);
+                    FD_CLR(clientSock[i], &readfd);
                     clientSock[i] = 0;
                     connectCount--;
                     maxfd--;
-                    close(clientSock[i]);
                 }
             }
         }
         
-        if (FD_ISSET(serverfd, &readfd)) {
+        if (FD_ISSET(serverfd, &tempfd)) {
                 //new connect
             if ((clientfd = accept(serverfd, (struct sockaddr *)&clientAdd, &addrlen)) == -1) {
                 perror("server accept failed\n");
@@ -104,6 +100,7 @@ int main(void) {
             }
 
             clientSock[connectCount++] = clientfd;
+            FD_SET(clientfd,&readfd);
             if (clientfd > maxfd)
                 maxfd = clientfd;
 
