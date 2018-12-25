@@ -1,0 +1,3 @@
+source/text/hello.txt author:renyifan age:24
+source/text/info.txt
+source/picture/luoye.jpg
