@@ -30,8 +30,8 @@ struct input {
 
 typedef struct sendInfo{
     char path[32];
-	char author[32];
-	char age[32];
+    char author[32];
+    char age[32];
 }send_t;
 
 static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp)
@@ -44,20 +44,19 @@ static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp)
 
 void getSendInfo(send_t *sInfo, char* exInfo)
 {
-	printf("exInfo = %s\n", exInfo);
-	
-	if (strncmp(exInfo, "author:", strlen("author:")) == 0) {
-		char *p = exInfo;
-		while(*p != ':')
-			p++;
+    printf("eXinfo is = %s\n", exInfo);
+    if (strncmp(exInfo, "author:", strlen("author:")) == 0) {
+        char *p = exInfo;
+        while(*p != ':')
+            p++;
         sprintf(sInfo->author, "author: %s", ++p);
-	}
-	if (strncmp(exInfo, "age:", strlen("age:")) == 0) {
-		char *p = exInfo;
-		while(*p != ':')
-			p++;
+    }
+    if (strncmp(exInfo, "age:", strlen("age:")) == 0) {
+        char *p = exInfo;
+        while(*p != ':')
+            p++;
         sprintf(sInfo->age, "age: %s", ++p);
-	}
+    }
 }
 
 void* postUrl(send_t *sInfo)
@@ -81,8 +80,8 @@ void* postUrl(send_t *sInfo)
     //set header
     slist = curl_slist_append(slist, type);
     slist = curl_slist_append(slist, "Expect: 100-continue");
-	slist = curl_slist_append(slist, sInfo->author);
-	slist = curl_slist_append(slist, sInfo->age);
+    slist = curl_slist_append(slist, sInfo->author);
+    slist = curl_slist_append(slist, sInfo->age);
 
     //get file size
     stat(path, &fileInfo);
@@ -113,7 +112,7 @@ int main(void)
 {
     int chooseNum;
     char str[STRLINESIZE];
-	char strLine[STRLINESIZE][STRLINESIZE];
+    char strLine[STRLINESIZE][STRLINESIZE];
     int line = 0, num = 0;
     FILE *fp;
     struct stat buf;
@@ -122,7 +121,7 @@ int main(void)
         printf("fopen failed\n");
         return -1;
     }
-	
+
     while (fgets(str, STRLINESIZE, fp)) {
         strncpy(strLine[line], str, strlen(str) - 1);
         printf("num = %d, filepath:  %s\n", line, strLine[line]);
@@ -131,6 +130,7 @@ int main(void)
         else
             printf("file line is more than STRLINESIZE\n");
     }
+
     while (1) {
         printf("please input which one you want to send:");
         scanf("%d", &chooseNum);
@@ -141,22 +141,24 @@ int main(void)
         }
 
         send_t *sInfo;
-		sInfo = (send_t *)malloc(sizeof(send_t));
- 		char* token = strtok(strLine[chooseNum], " ");
-		strcpy(sInfo->path, token);
-		printf("head = %s\n", token);		
+        sInfo = (send_t *)malloc(sizeof(send_t));
+        printf("strline[chooseNum] = %s\n", strLine[chooseNum]);
+        char temp[STRLINESIZE];
+        strcpy(temp, strLine[chooseNum]);
+        char* token = strtok(temp, " ");
+        strcpy(sInfo->path, token);
         while(1) {
-			token = strtok(NULL, " ");
-		    if (token == NULL)
-				break;
-		    getSendInfo(sInfo, token);
+            token = strtok(NULL, " ");
+            if (token == NULL)
+                break;
+            getSendInfo(sInfo, token);
         }
 
-        printf("author = %s\n", sInfo->author);
-		printf("age = %s\n", sInfo->age);
-
-        if (stat(sInfo->path, &buf) == 0)
+        if (stat(sInfo->path, &buf) == 0) {
             postUrl(sInfo);
+            free(sInfo);
+            sInfo = NULL;
+        }
         else {
             printf("you choose the file is not exist, please check!\n");
             break;
