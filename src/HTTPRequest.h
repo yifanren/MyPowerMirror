@@ -19,7 +19,13 @@
 #ifndef _HTTPREQUEST_H_
 #define _HTTPREQUEST_H_
 
-class HTTPRequest  {
+#include <iostream>
+
+
+#include "HTTPMessage.h"
+//#include "HTTPServer.h"
+
+class HTTPRequest : public HTTPMessage {
 private:
     int method;
     std::string requestUri;
@@ -30,9 +36,9 @@ protected:
 public:
     HTTPRequest();
     HTTPRequest(std::string sData);
-    //HTTPRequest(byte* pData, unsigned int len);
+    HTTPRequest(byte* pData, unsigned int len);
     virtual ~HTTPRequest();
-  # if 0  
+
     virtual byte *create();
     virtual bool parse();
 
@@ -58,7 +64,6 @@ public:
     std::string getRequestUri() {
         return requestUri;
     }
-	#endif
 };
 
 #endif

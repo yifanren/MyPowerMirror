@@ -88,14 +88,14 @@ void* postUrl(send_t *sInfo)
     uploadsize = fileInfo.st_size;
 
     //url
-    snprintf(url, sizeof(url), "http://%s:%d", IP, PORT);
+    snprintf(url, sizeof(url), "http://%s:%d/home/renyifan/simplecast/%s", IP, PORT, path);
     indata.in = fopen(path, "rb");
     indata.curl = curl_easy_init();
     if (indata.curl) {
         curl_easy_setopt(indata.curl, CURLOPT_URL, url);
         curl_easy_setopt(indata.curl, CURLOPT_POST, 1L);
         curl_easy_setopt(indata.curl, CURLOPT_READFUNCTION, read_callback);
-        curl_easy_setopt(indata.curl, CURLOPT_READDATA, &indata);
+        curl_easy_setopt(indata.curl, CURLOPT_READDATA, &indata.in);
         curl_easy_setopt(indata.curl, CURLOPT_POSTFIELDSIZE, uploadsize);
         curl_easy_setopt(indata.curl, CURLOPT_HTTPHEADER, slist);
         curl_easy_setopt(indata.curl, CURLOPT_TIMEOUT_MS, 5000);

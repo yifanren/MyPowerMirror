@@ -16,14 +16,17 @@
  limitations under the License.
  */
 
-//#include "HTTPMessage.h"
 #include "HTTPRequest.h"
 
-HTTPRequest::HTTPRequest() {
+HTTPRequest::HTTPRequest(): HTTPMessage()  {
     this->init();
 }
 
-HTTPRequest::HTTPRequest(std::string sData)  {
+HTTPRequest::HTTPRequest(std::string sData) : HTTPMessage(sData) {
+    this->init();
+}
+
+HTTPRequest::HTTPRequest(byte* pData, unsigned int len) : HTTPMessage(pData, len) {
     this->init();
 }
 
@@ -35,7 +38,7 @@ void HTTPRequest::init() {
     requestUri = "";
 }
 
-#if 0
+#if 1
 /**
  * Takes the method name and converts it to the corresponding method
  * id detailed in the Method enum
@@ -118,8 +121,8 @@ bool HTTPRequest::parse() {
 	std::string initial = "", methodName = "";
 
 	// Get elements from the initial line: <method> <path> <version>\r\n
-	//methodName = getStrElement();
-	//requestUri = getStrElement();
+	methodName = getStrElement();
+	requestUri = getStrElement();
 	version = getLine(); // End of the line, pull till \r\n
 
 	// Convert the name to the internal enumeration number
@@ -128,7 +131,7 @@ bool HTTPRequest::parse() {
 		parseErrorStr = "Invalid Method: " + methodName;
 		return false;
 	}
-	
+
 	// Parse and populate the headers map using the parseHeaders helper
 	parseHeaders();
 

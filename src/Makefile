@@ -11,5 +11,5 @@ server : $(OBJ)
 
 $(OBJ) : 
 
-
-g++ -o server HTTPServer.cpp main.cpp -std=c++11
+g++ -o server HTTPServer.cpp main.cpp Client.cpp ByteBuffer.cpp HTTPRequest.cpp HTTPMessage.cpp  HTTPResponse.cpp Resource.cpp  ResourceHost.cpp -std=c++11
+g++ -o server HTTPServer.cpp main.cpp Client.cpp -std=c++11

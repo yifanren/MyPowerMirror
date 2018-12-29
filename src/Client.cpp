@@ -9,7 +9,7 @@ Client::~Client() {
     //clearSendQueue();
 }
 
-#if 0
+#if 1
 /**
  * Add to Send Queue
  * Adds a SendQueueItem object to the end of this client's send queue

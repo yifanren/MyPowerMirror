@@ -16,8 +16,8 @@
  limitations under the License.
  */
 
-#include "HTTPMessage.h"
 #include "HTTPResponse.h"
+
 
 HTTPResponse::HTTPResponse() : HTTPMessage() {
     this->init();

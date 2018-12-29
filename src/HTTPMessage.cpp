@@ -27,11 +27,6 @@ HTTPMessage::HTTPMessage(std::string sData) : ByteBuffer(sData.size()+1) {
     this->init();
 }
 
-HTTPMessage::HTTPMessage(struct requestInfo    reqInfo) {
-    this->Minit();
-}
-
-
 HTTPMessage::HTTPMessage(byte* pData, unsigned int len) : ByteBuffer(pData, len) {
     this->init();
 }
@@ -173,7 +168,7 @@ std::string HTTPMessage::getStrElement(char delim) {
     
     // Increment the read position PAST the delimiter
     setReadPos(endPos+1);
-    
+
     return ret;
 }
 

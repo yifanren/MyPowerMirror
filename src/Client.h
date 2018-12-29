@@ -23,14 +23,15 @@
 #include <arpa/inet.h>
 #include <queue>
 
-//#include "SendQueueItem.h"
+#include "SendQueueItem.h"
 
 typedef unsigned char byte;
 
 class Client {
     int socketDesc; // Socket Descriptor
     sockaddr_in clientAddr;
-    
+
+    std::queue<SendQueueItem*> sendQueue;
 public:
     Client(int fd, sockaddr_in addr);
     ~Client();
@@ -45,14 +46,13 @@ public:
     char* getClientIP() {
         return inet_ntoa(clientAddr.sin_addr);
     }
-#if 0
 
     void addToSendQueue(SendQueueItem* item);
     unsigned int sendQueueSize();
     SendQueueItem* nextInSendQueue();
     void dequeueFromSendQueue();
     void clearSendQueue();
-	#endif
+
 };
 
 #endif

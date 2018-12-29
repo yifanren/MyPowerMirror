@@ -23,8 +23,9 @@
 #include <string>
 #include <sstream>
 
-#include "HTTPServer.h"
+//#include "HTTPServer.h"
 #include "ByteBuffer.h"
+//#include "HTTPResponse.h"
 
 // Constants
 #define HTTP_VERSION_10 "HTTP/1.0"
@@ -98,7 +99,6 @@ protected:
 public:
     HTTPMessage();
     HTTPMessage(std::string sData);
-	HTTPMessage(struct      requestInfo sInfo);
     HTTPMessage(byte *pData, unsigned int len);
     virtual ~HTTPMessage();
     

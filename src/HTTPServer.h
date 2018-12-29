@@ -1,27 +1,9 @@
-/**
-  httpserver
-  HTTPServer.h
-  Copyright 2011-2014 Ramsey Kant
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 #ifndef _HTTPSERVER_H_
 #define _HTTPSERVER_H_
 
 #include <unordered_map>
 #include <map>
-//#include <vector>
+#include <vector>
 #include <string>
 #include <iostream>
 #include <string.h>
@@ -37,6 +19,9 @@ limitations under the License.
 #include <unistd.h>
 #include <sys/select.h>
 
+#include "HTTPMessage.h"
+#include "ResourceHost.h"
+#include "HTTPResponse.h"
 #include "HTTPRequest.h"
 #include "Client.h"
 
@@ -53,12 +38,15 @@ class HTTPServer {
     // select
     struct timeval timeout; // Block for 2 seconds and 0ns at the most
     int maxfd; // max descriptor
-    //int evList[QUEUE_SIZE]; // Events that have triggered a filter in the kqueue (max QUEUE_SIZE at a time)
     fd_set read_fd; //set read_set
 
     //client
     std::unordered_map<int, Client*> clientMap;
-    //int clientConnect[CLIENTMAX];
+
+	// Resources / File System
+	std::vector<ResourceHost*> hostList; // Contains all ResourceHosts
+	std::unordered_map<std::string, ResourceHost*> vhosts; // Virtual hosts. Maps a host string to a ResourceHost to service the request
+
 
     // Connection processing
     void acceptConnection();
@@ -69,7 +57,16 @@ class HTTPServer {
     Client *getClient(int clfd);
 
     //void handleRequest(Client* cl, HTTPRequest* req);
+    void handleRequest(Client* cl, HTTPRequest* req);
+	void handleGet(Client* cl, HTTPRequest* req, ResourceHost* resHost);
+	void handlePOST(Client* cl, HTTPRequest* req);
+	void handleOptions(Client* cl, HTTPRequest* req);
+	void handleTrace(Client* cl, HTTPRequest* req);
 
+
+    // Response
+	void sendStatusResponse(Client* cl, int status, std::string msg = "");
+	void sendResponse(Client* cl, HTTPResponse* resp, bool disconnect);
 
     public:
     bool canRun;
