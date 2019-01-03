@@ -102,6 +102,8 @@ void* postUrl(send_t *sInfo)
 
         res = curl_easy_perform(indata.curl);
         printf("send reback res = %d\n", res);
+        if (res != CURLE_OK)
+            printf("error is = %s\n", curl_easy_strerror(res));
         curl_easy_cleanup(indata.curl);
     }
     fclose(indata.in);

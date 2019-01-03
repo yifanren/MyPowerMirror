@@ -6,7 +6,7 @@ Client::Client(int fd, sockaddr_in addr) {
 }
 
 Client::~Client() {
-    //clearSendQueue();
+    clearSendQueue();
 }
 
 #if 1
@@ -15,7 +15,7 @@ Client::~Client() {
  * Adds a SendQueueItem object to the end of this client's send queue
  */
 void Client::addToSendQueue(SendQueueItem* item) {
-	sendQueue.push(item);
+    sendQueue.push(item);
 }
 
 /**
@@ -25,7 +25,7 @@ void Client::addToSendQueue(SendQueueItem* item) {
  * @return Integer representing number of items in this clients send queue
  */
 unsigned int Client::sendQueueSize() {
-	return sendQueue.size();
+    return sendQueue.size();
 }
 
 /**
@@ -35,10 +35,10 @@ unsigned int Client::sendQueueSize() {
  * @return SendQueueItem object containing the data to send and current offset
  */
 SendQueueItem* Client::nextInSendQueue() {
-	if(sendQueue.empty())
-		return NULL;
+    if(sendQueue.empty())
+        return NULL;
 
-	return sendQueue.front();
+    return sendQueue.front();
 }
 
 /**
@@ -46,11 +46,11 @@ SendQueueItem* Client::nextInSendQueue() {
  * Deletes and dequeues first item in the queue
  */
 void Client::dequeueFromSendQueue() {
-	SendQueueItem* item = nextInSendQueue();
-	if(item != NULL) {
-		sendQueue.pop();
-		delete item;
-	}
+    SendQueueItem* item = nextInSendQueue();
+    if(item != NULL) {
+        sendQueue.pop();
+        delete item;
+    }
 }
 
 /**
@@ -58,9 +58,9 @@ void Client::dequeueFromSendQueue() {
  * Clears out the send queue for the client, deleting all internal SendQueueItem objects
  */
 void Client::clearSendQueue() {
-	while(!sendQueue.empty()) {
-		delete sendQueue.front();
-		sendQueue.pop();
-	}
+    while(!sendQueue.empty()) {
+        delete sendQueue.front();
+        sendQueue.pop();
+    }
 }
 #endif

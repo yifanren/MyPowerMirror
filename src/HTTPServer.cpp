@@ -79,18 +79,18 @@ void HTTPServer::process() {
 
         // Get a list of changed socket descriptors with a read event triggered in evList
         nev = select(maxfd + 1, &tempSet, NULL, NULL, &timeout);
-		int curFd = 0;
+        int curFd = 0;
         if (nev < 0) {
             printf("select failed\n");
             break;
         }
 
         if(nev == 0) {
-            printf("timeout\n");	
+            printf("timeout\n");
             continue;
         }
 
-		for ( it = clientMap.begin(); it != clientMap.end(); it++) {
+        for ( it = clientMap.begin(); it != clientMap.end(); it++) {
             if (FD_ISSET(it->first, &tempSet)) {
                 cl = it->second;
                 printf("[%s] send request\n", cl->getClientIP());
@@ -105,7 +105,7 @@ void HTTPServer::process() {
 }
 /**
  * Accept Connection
- * When a new connection is detected in runServer() this function is called. This attempts to accept the pending 
+ * When a new connection is detected in runServer() this function is called. This attempts to accept the pending
  * connection, instance a Client object, and add to the client Map
  */
 void HTTPServer::acceptConnection() {
@@ -129,7 +129,7 @@ void HTTPServer::acceptConnection() {
 
     // Select maxfd
     FD_SET(clfd, &read_fd);
-	if (maxfd < clfd)
+    if (maxfd < clfd)
         maxfd = clfd;
 
     // Print the client's IP on connect
@@ -178,8 +178,8 @@ void HTTPServer::readClient(Client *cl) {
     int flags = 0;
     int i = 0;
     ssize_t len = 0;
-	std::string hlenstr = " ";
-	
+    std::string hlenstr = " ";
+
     HTTPRequest* req;
     char* pData = new char[DATA_LEN];
     memset(pData, 0, DATA_LEN);
@@ -191,33 +191,33 @@ void HTTPServer::readClient(Client *cl) {
         disconnectClient(cl, true);
     } else {
         if (strstr(pData, "Expect: 100-continue")) {
-			 printf("Expect: 100-continue here ...\n");
-			 req = new HTTPRequest((byte *)pData, lenRecv);
-		     req->parse();
+            printf("Expect: 100-continue here ...\n");
+            req = new HTTPRequest((byte *)pData, lenRecv);
+            req->parse();
 
-			 hlenstr = req->getHeaderValue("Content-Length");
-			 send(cl->getSocket(), "HTTP/1.1 200 OK\r\n", 17, 0);
-			 int contLen = atoi(hlenstr.c_str());
-			 int temp = 0;
-			 std::cout << "Contlen = " << contLen << std::endl;
+            hlenstr = req->getHeaderValue("Content-Length");
+            send(cl->getSocket(), "HTTP/1.1 200 OK\r\n", 17, 0);
+            int contLen = atoi(hlenstr.c_str());
+            int temp = 0;
+            std::cout << "Contlen = " << contLen << std::endl;
 
-			 char* buff = new char[DATA_LEN];
-             while (1) {
-			 	printf("here is while...\n");
-			 	memset(buff, 0, DATA_LEN);
-		        len = recv(cl->getSocket(), buff, DATA_LEN, 0);
-				temp += len;
-				printf("lenrecv = %d\n", temp);
-				strcat(pData, buff);
+            char* buff = new char[DATA_LEN];
+            while (1) {
+                printf("here is while...\n");
+                memset(buff, 0, DATA_LEN);
+                len = recv(cl->getSocket(), buff, DATA_LEN, 0);
+                temp += len;
+                printf("lenrecv = %d\n", temp);
+                strcat(pData, buff);
 
-			    if (temp == contLen)
-					break;
-             }
-			 lenRecv += temp;
-			 printf("lenRecv = %lu\n", lenRecv);
-			 delete [] buff;
+                if (temp == contLen)
+                    break;
+            }
+            lenRecv += temp;
+            printf("lenRecv = %lu\n", lenRecv);
+            delete [] buff;
 
-		}
+        }
 
         // Data received: Place the data in an HTTPRequest and pass it to handleRequest for processing
         req = new HTTPRequest((byte *)pData, lenRecv);
@@ -226,7 +226,7 @@ void HTTPServer::readClient(Client *cl) {
         delete [] pData;
 
         printf("request handle end...\n");
-			
+
     }
 }
 
@@ -251,68 +251,48 @@ Client* HTTPServer::getClient(int clfd) {
  */
 void HTTPServer::handleRequest(Client *cl, HTTPRequest* req) {
     // Parse the request
- 	// If there's an error, report it and send a server error in response
+    // If there's an error, report it and send a server error in response
     if(!req->parse()) {
-		std::cout << "[" << cl->getClientIP() << "] There was an error processing the request of type: " << req->methodIntToStr(req->getMethod()) << std::endl;
-		std::cout << req->getParseError() << std::endl;
-		sendStatusResponse(cl, Status(BAD_REQUEST), req->getParseError());
-		return;
+        std::cout << "[" << cl->getClientIP() << "] There was an error processing the request of type: " << req->methodIntToStr(req->getMethod()) << std::endl;
+        std::cout << req->getParseError() << std::endl;
+        sendStatusResponse(cl, Status(BAD_REQUEST), req->getParseError());
+        return;
     }
 
-	std::cout << "[" << cl->getClientIP() << "] " << req->methodIntToStr(req->getMethod()) << " " << req->getRequestUri() << std::endl;
-	std::cout << "Headers:" << std::endl;
-	for(int i = 0; i < req->getNumHeaders(); i++) {
-		std::cout << req->getHeaderStr(i) << std::endl;
-	}
-	std::cout << std::endl;
+    std::cout << "[" << cl->getClientIP() << "] " << req->methodIntToStr(req->getMethod()) << " " << req->getRequestUri() << std::endl;
+    std::cout << "Headers:" << std::endl;
+    for(int i = 0; i < req->getNumHeaders(); i++) {
+        std::cout << req->getHeaderStr(i) << std::endl;
+    }
+    std::cout << std::endl;
 
-	// Determine the appropriate vhost
-	ResourceHost* resHost = NULL;
-	std::string host = "";
-    
+    // Determine the appropriate vhost
+    std::string host = "";
+
     // Retrieve the host specified in the request (Required for HTTP/1.1 compliance)
     if(req->getVersion().compare(HTTP_VERSION_11) == 0) {
-		host = req->getHeaderValue("Host");
-		std::cout << "host = " << host << std::endl;
-		//std::unordered_map<std::string, ResourceHost*>::const_iterator it = vhosts.find(host);
-#if 0
-		if(it != vhosts.end())
-			resHost = it->second;
-		std::cout << "reshost = " << resHost << std::endl;
-#endif
-	} else {
-		// Temporary: HTTP/1.0 are given the first ResouceHost in the hostList
-		// TODO: Allow admin to specify a 'default resource host'
-		//if(hostList.size() > 0)
-		//	resHost = hostList[0];
-	}
-#if 0
-	// ResourceHost couldnt be determined or the Host specified by the client was invalid
-	if(resHost == NULL) {
-		sendStatusResponse(cl, Status(BAD_REQUEST), "Invalid/No Host specified: " + host);
-		return;
-	}
-#endif
-	printf("req->getMethod() = %d\n", req->getMethod());
+        host = req->getHeaderValue("Host");
+    }
+
     // Send the request to the correct handler function
     switch(req->getMethod()) {
-	    case Method(POST):
-			handlePOST(cl, req);
-		    break;
-		case Method(HEAD):
-        case Method(GET):
-            handleGet(cl, req, resHost);
+        case Method(POST):
+            handlePOST(cl, req);
             break;
-		case Method(OPTIONS):
-			handleOptions(cl, req);
-			break;
-		case Method(TRACE):
-			handleTrace(cl, req);
-			break;
+        case Method(HEAD):
+        case Method(GET):
+            //handleGet(cl, req, resHost);
+            break;
+        case Method(OPTIONS):
+            handleOptions(cl, req);
+            break;
+        case Method(TRACE):
+            handleTrace(cl, req);
+            break;
         default:
-			std::cout << "[" << cl->getClientIP() << "] Could not handle or determine request of type " << req->methodIntToStr(req->getMethod()) << std::endl;
-			sendStatusResponse(cl, Status(NOT_IMPLEMENTED));
-		break;
+            std::cout << "[" << cl->getClientIP() << "] Could not handle or determine request of type " << req->methodIntToStr(req->getMethod()) << std::endl;
+            sendStatusResponse(cl, Status(NOT_IMPLEMENTED));
+            break;
     }
 }
 
@@ -324,38 +304,38 @@ void HTTPServer::handleRequest(Client *cl, HTTPRequest* req) {
  * @param req State of the request
  * @param resHost Resource host to service the request
  */
-void HTTPServer::handleGet(Client* cl, HTTPRequest* req, ResourceHost* resHost) {	
-	// Check if the requested resource exists
-	std::string uri = req->getRequestUri();
+void HTTPServer::handleGet(Client* cl, HTTPRequest* req, ResourceHost* resHost) {
+    // Check if the requested resource exists
+    std::string uri = req->getRequestUri();
     Resource* r = resHost->getResource(uri);
 
-	if(r != NULL) { // Exists
-		HTTPResponse* resp = new HTTPResponse();
-		resp->setStatus(Status(OK));
-		resp->addHeader("Content-Type", r->getMimeType());
-		resp->addHeader("Content-Length", r->getSize());
-		
-		// Only send a message body if it's a GET request. Never send a body for HEAD
-		if(req->getMethod() == Method(GET))
-			resp->setData(r->getData(), r->getSize());
-		
-		bool dc = false;
+    if(r != NULL) { // Exists
+        HTTPResponse* resp = new HTTPResponse();
+        resp->setStatus(Status(OK));
+        resp->addHeader("Content-Type", r->getMimeType());
+        resp->addHeader("Content-Length", r->getSize());
 
-		// HTTP/1.0 should close the connection by default
-		if(req->getVersion().compare(HTTP_VERSION_10) == 0)
-			dc = true;
+        // Only send a message body if it's a GET request. Never send a body for HEAD
+        if(req->getMethod() == Method(GET))
+            resp->setData(r->getData(), r->getSize());
 
-		// If Connection: close is specified, the connection should be terminated after the request is serviced
-		std::string connection_val = req->getHeaderValue("Connection");
-		if(connection_val.compare("close") == 0)
-			dc = true;
-			
-		sendResponse(cl, resp, dc);
-		delete resp;
-		delete r;
-	} else { // Not found
-		sendStatusResponse(cl, Status(NOT_FOUND));
-	}
+        bool dc = false;
+
+        // HTTP/1.0 should close the connection by default
+        if(req->getVersion().compare(HTTP_VERSION_10) == 0)
+            dc = true;
+
+        // If Connection: close is specified, the connection should be terminated after the request is serviced
+        std::string connection_val = req->getHeaderValue("Connection");
+        if(connection_val.compare("close") == 0)
+            dc = true;
+
+        sendResponse(cl, resp, dc);
+        delete resp;
+        delete r;
+    } else { // Not found
+        sendStatusResponse(cl, Status(NOT_FOUND));
+    }
 }
 
 /**
@@ -366,46 +346,26 @@ void HTTPServer::handleGet(Client* cl, HTTPRequest* req, ResourceHost* resHost) 
  * @param req State of the request
  * @param resHost Resource host to service the request
  */
-void HTTPServer::handlePOST(Client* cl, HTTPRequest* req) {	
-	// Check if the requested resource exists
-	std::string uri = req->getRequestUri();
- //   Resource* r = resHost->getResource(uri);
-//    Resource* r = NULL;
+void HTTPServer::handlePOST(Client* cl, HTTPRequest* req) {
+    // Check if the requested resource exists
+    std::cout << "data = " << req->getData() << std::endl;
 
     printf("Here is handlePost...\n");
-//	if(r == NULL) { // Exists
-		HTTPResponse* resp = new HTTPResponse();
-		resp->setStatus(Status(OK));
-	    printf("here is a\n");
-		resp->addHeader("Content-Type", req->getHeaderValue("Content-Type"));
-        printf("here is b\n");
-		resp->addHeader("Content-Length", req->getHeaderValue("Content-Length"));
-		printf("here is 1\n");
-		// Only send a message body if it's a GET request. Never send a body for HEAD
-		if(req->getMethod() == Method(POST))
-			//resp->setData(r->getData(), r->getSize());
-			resp->setData((byte*)'1', 1);
-		printf("here is 2\n");		
-		bool dc = false;
+    HTTPResponse* resp = new HTTPResponse();
+    resp->setStatus(Status(OK));
+    resp->addHeader("Content-Type", "text/html");
+    resp->addHeader("Content-Length", "1");
+    printf("here set head...\n");
 
-		// HTTP/1.0 should close the connection by default
-		if(req->getVersion().compare(HTTP_VERSION_10) == 0)
-			dc = true;
-		printf("here is 3\n");
+    bool dc = false;
 
-		// If Connection: close is specified, the connection should be terminated after the request is serviced
-		std::string connection_val = req->getHeaderValue("Connection");
-		if(connection_val.compare("close") == 0)
-			dc = true;
-			
-		sendResponse(cl, resp, dc);
-		printf("here is 4\n");
+    // HTTP/1.0 should close the connection by default
+    if(req->getVersion().compare(HTTP_VERSION_11) == 0)
+        dc = true;
 
-//		delete resp;
-//		delete r;
-//	} else { // Not found
-		//sendStatusResponse(cl, Status(NOT_FOUND));
-	//}
+    // If Connection: close is specified, the connection should be terminated after the request is serviced
+    printf("sendresponse ...\n");
+    sendResponse(cl, resp, dc);
 }
 
 
@@ -418,16 +378,16 @@ void HTTPServer::handlePOST(Client* cl, HTTPRequest* req) {
  * @param req State of the request
  */
 void HTTPServer::handleOptions(Client* cl, HTTPRequest* req) {
-	// For now, we'll always return the capabilities of the server instead of figuring it out for each resource
-	std::string allow = "POST, HEAD, GET, OPTIONS, TRACE";
+    // For now, we'll always return the capabilities of the server instead of figuring it out for each resource
+    std::string allow = "POST, HEAD, GET, OPTIONS, TRACE";
 
-	HTTPResponse* resp = new HTTPResponse();
-	resp->setStatus(Status(OK));
-	resp->addHeader("Allow", allow.c_str());
-	resp->addHeader("Content-Length", "0"); // Required
+    HTTPResponse* resp = new HTTPResponse();
+    resp->setStatus(Status(OK));
+    resp->addHeader("Allow", allow.c_str());
+    resp->addHeader("Content-Length", "0"); // Required
 
-	sendResponse(cl, resp, true);
-	delete resp;
+    sendResponse(cl, resp, true);
+    delete resp;
 }
 
 /**
@@ -439,22 +399,22 @@ void HTTPServer::handleOptions(Client* cl, HTTPRequest* req) {
  * @param req State of the request
  */
 void HTTPServer::handleTrace(Client* cl, HTTPRequest *req) {
-	// Get a byte array representation of the request
-	unsigned int len = req->size();
-	byte* buf = new byte[len];
-	req->setReadPos(0); // Set the read position at the beginning since the request has already been read to the end
-	req->getBytes(buf, len);
-	
-	// Send a response with the entire request as the body
-	HTTPResponse* resp = new HTTPResponse();
-	resp->setStatus(Status(OK));
-	resp->addHeader("Content-Type", "message/http");
-	resp->addHeader("Content-Length", len);
-	resp->setData(buf, len);
-	sendResponse(cl, resp, true);
-	
-	delete resp;
-	delete[] buf;
+    // Get a byte array representation of the request
+    unsigned int len = req->size();
+    byte* buf = new byte[len];
+    req->setReadPos(0); // Set the read position at the beginning since the request has already been read to the end
+    req->getBytes(buf, len);
+
+    // Send a response with the entire request as the body
+    HTTPResponse* resp = new HTTPResponse();
+    resp->setStatus(Status(OK));
+    resp->addHeader("Content-Type", "message/http");
+    resp->addHeader("Content-Length", len);
+    resp->setData(buf, len);
+    sendResponse(cl, resp, true);
+
+    delete resp;
+    delete[] buf;
 }
 
 
@@ -469,22 +429,22 @@ void HTTPServer::handleTrace(Client* cl, HTTPRequest *req) {
  * @param msg An additional message to append to the body text
  */
 void HTTPServer::sendStatusResponse(Client* cl, int status, std::string msg) {
-	HTTPResponse* resp = new HTTPResponse();
-	resp->setStatus(Status(status));
-	
-	// Body message: Reason string + additional msg	
-	std::string body = resp->getReason() + ": " + msg;
-	unsigned int slen = body.length();
-	char* sdata = new char[slen];
-	strncpy(sdata, body.c_str(), slen);
-	
-	resp->addHeader("Content-Type", "text/plain");
-	resp->addHeader("Content-Length", slen);
-	resp->setData((byte*)sdata, slen);
-	
-	sendResponse(cl, resp, true);
-	
-	delete resp;
+    HTTPResponse* resp = new HTTPResponse();
+    resp->setStatus(Status(status));
+
+    // Body message: Reason string + additional msg
+    std::string body = resp->getReason() + ": " + msg;
+    unsigned int slen = body.length();
+    char* sdata = new char[slen];
+    strncpy(sdata, body.c_str(), slen);
+
+    resp->addHeader("Content-Type", "text/plain");
+    resp->addHeader("Content-Length", slen);
+    resp->setData((byte*)sdata, slen);
+
+    sendResponse(cl, resp, true);
+
+    delete resp;
 }
 
 /**
@@ -496,30 +456,22 @@ void HTTPServer::sendStatusResponse(Client* cl, int status, std::string msg) {
  * @param disconnect Should the server disconnect the client after sending (Optional, default = false)
  */
 void HTTPServer::sendResponse(Client* cl, HTTPResponse* resp, bool disconnect) {
-	// Server Header
-	resp->addHeader("Server", "httpserver/1.0");
-	
-	// Time stamp the response with the Date header
-	std::string tstr;
-	char tbuf[36];
-	time_t rawtime;
-	struct tm* ptm;
-	time(&rawtime);
-	ptm = gmtime(&rawtime);
-	// Ex: Fri, 31 Dec 1999 23:59:59 GMT
-	strftime(tbuf, 36, "%a, %d %b %Y %H:%M:%S GMT", ptm);
-	tstr = tbuf;
-	resp->addHeader("Date", tstr);
-	
-	// Include a Connection: close header if this is the final response sent by the server
-	if(disconnect)
-		resp->addHeader("Connection", "close");
-	
-	// Get raw data by creating the response (we are responsible for cleaning it up in process())
-	byte* pData = resp->create();
+    // Server Header
+    // Time stamp the response with the Date header
+    std::string tstr;
+    char tbuf[1024];
 
-	// Add data to the Client's send queue
-	cl->addToSendQueue(new SendQueueItem(pData, resp->size(), disconnect));
+    if(disconnect)
+        resp->addHeader("Connection", "close");
+    // Get raw data by creating the response (we are responsible for cleaning it up in process())
+    printf("create start ...\n");
+    byte* pData = resp->create();
+    strcpy(tbuf, (char*)pData);
+    printf("create end ...\n");
+    // Add data to the Client's send queue
+    cl->addToSendQueue(new SendQueueItem(pData, resp->size(), disconnect));
+
+    // Send data to client
+    send(cl->getSocket(), tbuf, strlen(tbuf), 0);
 }
-
 
