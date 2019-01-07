@@ -104,20 +104,19 @@ byte* HTTPResponse::create() {
     std::stringstream sline;
 	sline << version << " " << status << " " << reason;
     putLine(sline.str());
-    
+
     // Put all headers
     putHeaders();
-    
+
     // If theres body data, add it now
     if((data != NULL) && dataLen > 0) {
         putBytes(data, dataLen);
     }
-    
+
     // Allocate space for the returned byte array and return it
-	byte* createRetData = new byte[size()];
+	byte *createRetData = new byte[size()];
 	setReadPos(0);
 	getBytes(createRetData, size());
-    
     return createRetData;
 }
 

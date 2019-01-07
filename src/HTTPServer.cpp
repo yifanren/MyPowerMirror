@@ -86,26 +86,24 @@ void HTTPServer::process() {
         }
 
         if(nev == 0) {
-            printf("timeout\n");
+            printf("timeout\n");	
             continue;
         }
 
         for ( it = clientMap.begin(); it != clientMap.end(); it++) {
             if (FD_ISSET(it->first, &tempSet)) {
                 cl = it->second;
-                printf("[%s] send request\n", cl->getClientIP());
                 readClient(cl);
             }
         }
         if (FD_ISSET(listenSocket, &tempSet)) {
             acceptConnection();
-            printf("connect end ..\n");
         }
     } // canRun
 }
 /**
  * Accept Connection
- * When a new connection is detected in runServer() this function is called. This attempts to accept the pending
+ * When a new connection is detected in runServer() this function is called. This attempts to accept the pending 
  * connection, instance a Client object, and add to the client Map
  */
 void HTTPServer::acceptConnection() {
@@ -192,41 +190,37 @@ void HTTPServer::readClient(Client *cl) {
     } else {
         if (strstr(pData, "Expect: 100-continue")) {
             printf("Expect: 100-continue here ...\n");
-            req = new HTTPRequest((byte *)pData, lenRecv);
+            HTTPRequest* req = new HTTPRequest((byte *)pData, lenRecv);
             req->parse();
 
             hlenstr = req->getHeaderValue("Content-Length");
             send(cl->getSocket(), "HTTP/1.1 200 OK\r\n", 17, 0);
             int contLen = atoi(hlenstr.c_str());
             int temp = 0;
-            std::cout << "Contlen = " << contLen << std::endl;
-
             char* buff = new char[DATA_LEN];
             while (1) {
-                printf("here is while...\n");
                 memset(buff, 0, DATA_LEN);
                 len = recv(cl->getSocket(), buff, DATA_LEN, 0);
                 temp += len;
-                printf("lenrecv = %d\n", temp);
                 strcat(pData, buff);
 
                 if (temp == contLen)
                     break;
+
+                printf("temp = %d , contlen = %d\n", temp, contLen);
             }
             lenRecv += temp;
-            printf("lenRecv = %lu\n", lenRecv);
+            printf("lenrecv = %lu\n", lenRecv);
             delete [] buff;
-
         }
 
         // Data received: Place the data in an HTTPRequest and pass it to handleRequest for processing
+        printf("req before...\n");
         req = new HTTPRequest((byte *)pData, lenRecv);
+        printf("req httprequest...\n");
         handleRequest(cl, req);
         delete req;
-        delete [] pData;
-
-        printf("request handle end...\n");
-
+        delete [] pData;			
     }
 }
 
@@ -259,7 +253,7 @@ void HTTPServer::handleRequest(Client *cl, HTTPRequest* req) {
         return;
     }
 
-    std::cout << "[" << cl->getClientIP() << "] " << req->methodIntToStr(req->getMethod()) << " " << req->getRequestUri() << std::endl;
+    std::cout << "[" << cl->getClientIP() << "] " << "send request" << std::endl;
     std::cout << "Headers:" << std::endl;
     for(int i = 0; i < req->getNumHeaders(); i++) {
         std::cout << req->getHeaderStr(i) << std::endl;
@@ -304,7 +298,7 @@ void HTTPServer::handleRequest(Client *cl, HTTPRequest* req) {
  * @param req State of the request
  * @param resHost Resource host to service the request
  */
-void HTTPServer::handleGet(Client* cl, HTTPRequest* req, ResourceHost* resHost) {
+void HTTPServer::handleGet(Client* cl, HTTPRequest* req, ResourceHost* resHost) {	
     // Check if the requested resource exists
     std::string uri = req->getRequestUri();
     Resource* r = resHost->getResource(uri);
@@ -346,16 +340,12 @@ void HTTPServer::handleGet(Client* cl, HTTPRequest* req, ResourceHost* resHost) 
  * @param req State of the request
  * @param resHost Resource host to service the request
  */
-void HTTPServer::handlePOST(Client* cl, HTTPRequest* req) {
+void HTTPServer::handlePOST(Client* cl, HTTPRequest* req) {	
     // Check if the requested resource exists
-    std::cout << "data = " << req->getData() << std::endl;
-
-    printf("Here is handlePost...\n");
     HTTPResponse* resp = new HTTPResponse();
     resp->setStatus(Status(OK));
     resp->addHeader("Content-Type", "text/html");
-    resp->addHeader("Content-Length", "1");
-    printf("here set head...\n");
+    resp->addHeader("Content-Length", "0");
 
     bool dc = false;
 
@@ -364,7 +354,6 @@ void HTTPServer::handlePOST(Client* cl, HTTPRequest* req) {
         dc = true;
 
     // If Connection: close is specified, the connection should be terminated after the request is serviced
-    printf("sendresponse ...\n");
     sendResponse(cl, resp, dc);
 }
 
@@ -432,7 +421,7 @@ void HTTPServer::sendStatusResponse(Client* cl, int status, std::string msg) {
     HTTPResponse* resp = new HTTPResponse();
     resp->setStatus(Status(status));
 
-    // Body message: Reason string + additional msg
+    // Body message: Reason string + additional msg	
     std::string body = resp->getReason() + ": " + msg;
     unsigned int slen = body.length();
     char* sdata = new char[slen];
@@ -457,6 +446,7 @@ void HTTPServer::sendStatusResponse(Client* cl, int status, std::string msg) {
  */
 void HTTPServer::sendResponse(Client* cl, HTTPResponse* resp, bool disconnect) {
     // Server Header
+    //resp->addHeader("Server", "httpserver/1.1");
     // Time stamp the response with the Date header
     std::string tstr;
     char tbuf[1024];
@@ -464,10 +454,8 @@ void HTTPServer::sendResponse(Client* cl, HTTPResponse* resp, bool disconnect) {
     if(disconnect)
         resp->addHeader("Connection", "close");
     // Get raw data by creating the response (we are responsible for cleaning it up in process())
-    printf("create start ...\n");
     byte* pData = resp->create();
     strcpy(tbuf, (char*)pData);
-    printf("create end ...\n");
     // Add data to the Client's send queue
     cl->addToSendQueue(new SendQueueItem(pData, resp->size(), disconnect));
 

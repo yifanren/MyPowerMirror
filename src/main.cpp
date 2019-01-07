@@ -9,17 +9,18 @@ int main(void)
 {
     // Instance and start the server
     svr = new HTTPServer(atoi(PORT));
-	if (!svr->start()) {
-		svr->stop();
-		return -1;
-	}
+    if (!svr->start()) {
+        svr->stop();
+        return -1;
+    }
 
-	// Run main event loop
-	svr->process();
+    // Run main event loop
+    svr->process();
 
-	// Stop the server
-	svr->stop();
-	//delete svr;
+    // Stop the server
+    svr->stop();
+    //delete svr;
+    delete svr;
 
     return 0;
 }

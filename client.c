@@ -88,7 +88,7 @@ void* postUrl(send_t *sInfo)
     uploadsize = fileInfo.st_size;
 
     //url
-    snprintf(url, sizeof(url), "http://%s:%d/home/renyifan/simplecast/%s", IP, PORT, path);
+    snprintf(url, sizeof(url), "http://%s:%d", IP, PORT);
     indata.in = fopen(path, "rb");
     indata.curl = curl_easy_init();
     if (indata.curl) {

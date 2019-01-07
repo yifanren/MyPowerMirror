@@ -1,15 +1,16 @@
 OBJ= server.o main.o
 PROGRAM= server
+OBJ=  HTTPServer.o main.o Client.o ByteBuffer.o HTTPRequest.o HTTPMessage.o  HTTPResponse.o Resource.o  ResourceHost.o
 CFLAGS=-std=c++11
 LIBS=
 CC=g++
 
-all: $(PROGRAM)
+all:$(PROGRAM)
 
-server : $(OBJ)
-	CC -o $@ $^ $(CFLAGS)
+$(PROGRAM):$(OBJ)
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+%.o:%.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OBJ) : 
-
-g++ -o server HTTPServer.cpp main.cpp Client.cpp ByteBuffer.cpp HTTPRequest.cpp HTTPMessage.cpp  HTTPResponse.cpp Resource.cpp  ResourceHost.cpp -std=c++11
-g++ -o server HTTPServer.cpp main.cpp Client.cpp -std=c++11
+clean:
+	-rm -f $(OBJ) $(PROGRAM)
