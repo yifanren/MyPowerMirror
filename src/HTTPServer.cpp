@@ -1,5 +1,5 @@
 #include "HTTPServer.h"
-#define DATA_LEN 5555
+#define DATA_LEN 555555
 
 HTTPServer::HTTPServer(int port) {
     canRun = false;
@@ -190,7 +190,7 @@ void HTTPServer::readClient(Client *cl) {
     } else {
         if (strstr(pData, "Expect: 100-continue")) {
             printf("Expect: 100-continue here ...\n");
-            HTTPRequest* req = new HTTPRequest((byte *)pData, lenRecv);
+            req = new HTTPRequest((byte *)pData, lenRecv);
             req->parse();
 
             hlenstr = req->getHeaderValue("Content-Length");
