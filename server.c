@@ -29,11 +29,9 @@ void response(Request res, int connect){
     int fp = -1;
 
     //发送状态码  (用字符串链接)
-    //int len = strlen("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: bytes\r\n")+1;
-    int len = strlen("HTTP/1.1 200 OK\r\nConnection: close\r\n")+1;
+    int len = strlen("HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: bytes\r\n")+1;
     buf = (char *)malloc(sizeof(char)*len);
-    //strcpy(buf,"HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: bytes\r\n");
-    strcpy(buf,"HTTP/1.1 200 OK\r\nConnection: close\r\n");
+    strcpy(buf,"HTTP/1.1 200 OK\r\nConnection: close\r\nAccept-Ranges: bytes\r\n");
     sprintf(temp,"Content-Type: %s\r\n", getFileType(res.content_Type));
     len += strlen(temp);
     buf = (char *)realloc(buf,sizeof(char)*len);
@@ -46,7 +44,6 @@ void response(Request res, int connect){
     buf = (char *)realloc(buf,sizeof(char)*(len+4));
     memcpy(&buf[len], "\r\n", 2);
     send(connect, buf, len, 0);
-    printf("buf = %s\n", buf);
     printf("finish\n");
 }
 

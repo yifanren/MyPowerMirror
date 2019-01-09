@@ -1,6 +1,6 @@
 OBJS     = server.o client.o util.o http.o
 CC      :=
-LIBS    := -L./lib -lcurl -lpthread
+LIBS    := -L./lib -lpthread -Wl,-rpath=./lib -lcurl
 CFLAGS  :=
 PROGRAM := server client
 

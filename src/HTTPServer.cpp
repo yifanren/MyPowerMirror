@@ -194,9 +194,8 @@ void HTTPServer::readClient(Client *cl) {
             req->parse();
 
             hlenstr = req->getHeaderValue("Content-Length");
-            send(cl->getSocket(), "HTTP/1.1 200 OK\r\n", 17, 0);
             int contLen = atoi(hlenstr.c_str());
-            int temp = 0;
+            ssize_t temp = 0;
             char* buff = new char[DATA_LEN];
             while (1) {
                 memset(buff, 0, DATA_LEN);
@@ -206,18 +205,13 @@ void HTTPServer::readClient(Client *cl) {
 
                 if (temp == contLen)
                     break;
-
-                printf("temp = %d , contlen = %d\n", temp, contLen);
             }
             lenRecv += temp;
-            printf("lenrecv = %lu\n", lenRecv);
             delete [] buff;
         }
 
         // Data received: Place the data in an HTTPRequest and pass it to handleRequest for processing
-        printf("req before...\n");
         req = new HTTPRequest((byte *)pData, lenRecv);
-        printf("req httprequest...\n");
         handleRequest(cl, req);
         delete req;
         delete [] pData;			
@@ -405,8 +399,6 @@ void HTTPServer::handleTrace(Client* cl, HTTPRequest *req) {
     delete resp;
     delete[] buf;
 }
-
-
 
 /**
  * Send Status Response

@@ -20,9 +20,7 @@
 
 ResourceHost::ResourceHost(std::string base) {
     baseDiskPath = base;
-    
     // Check to see if the disk base path is a valid path
-    
 }
 
 ResourceHost::~ResourceHost() {
